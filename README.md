@@ -261,6 +261,6 @@ This code uses:
 
 ---
 
-**Submission Date**: February 2026  
-**Team**: [Your Team Name]  
+**Submission Date**: 7 February 2026  
+**Team**: Zenith  
 **Model**: DINOv2-ViT-S + ConvNeXt Head
