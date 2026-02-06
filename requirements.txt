@@ -1,0 +1,53 @@
+# Hackathon Segmentation Challenge - Requirements
+# Python 3.13 Virtual Environment
+# GPU: CPU-only (AMD GPU not supported on Windows)
+# Installation: pip install -r requirements.txt
+
+# Core Framework
+torch==2.1.0
+torchvision==0.16.0
+torchaudio==2.1.0
+
+# Vision & Image Processing
+opencv-python==4.8.1.78
+Pillow==10.1.0
+imageio==2.33.1
+
+# Visualization & Plotting
+matplotlib==3.8.2
+seaborn==0.13.0
+
+# Scientific Computing
+numpy==1.24.3
+scipy==1.11.4
+scikit-learn==1.3.2
+
+# Progress Bars & Utilities
+tqdm==4.66.1
+pyyaml==6.0.1
+
+# Data Processing
+pandas==2.1.3
+
+# Optional: Development & Debugging
+# ipython==8.18.1
+# jupyter==1.0.0
+# black==23.12.0
+# pylint==3.0.3
+
+# Notes:
+# - torch==2.1.0 is CPU-only build (AMD GPU limitations on Windows)
+# - DINOv2 downloads automatically via torch.hub on first use (~85MB)
+# - Total installation: ~500MB
+# 
+# Installation command:
+#   pip install -r requirements.txt
+#
+# Verify installation:
+#   python -c "import torch; print(f'PyTorch {torch.__version__}, Device: {torch.device(\"cpu\")}')"
+#
+# Training:
+#   python dataset/train_segmentation.py
+#
+# Testing:
+#   python dataset/test_segmentation.py
