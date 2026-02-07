@@ -51,6 +51,18 @@ def read_inference_benchmark(bench_file: Path):
     except Exception:
         return None
 
+
+def read_test_metrics(test_metrics_file: Path):
+    if not test_metrics_file.exists():
+        return None
+    for line in test_metrics_file.read_text(encoding='utf-8', errors='ignore').splitlines():
+        if line.strip().startswith('Mean IoU:'):
+            try:
+                return float(line.split(':')[-1].strip())
+            except ValueError:
+                return None
+    return None
+
 def create_submission_package():
     """Create final submission zip file."""
     
@@ -129,6 +141,17 @@ def create_submission_package():
         for file in eval_results.glob('*.json'):
             shutil.copy(file, results_dir / file.name)
             print(f"  [OK] Copied {file.name}")
+
+        # Optional test evaluation artifacts
+        test_metrics = eval_results / 'test_evaluation_metrics.txt'
+        if test_metrics.exists():
+            shutil.copy(test_metrics, results_dir / 'test_evaluation_metrics.txt')
+            print("  [OK] Copied test_evaluation_metrics.txt")
+
+        test_chart = eval_results / 'test_per_class_metrics.png'
+        if test_chart.exists():
+            shutil.copy(test_chart, results_dir / 'test_per_class_metrics.png')
+            print("  [OK] Copied test_per_class_metrics.png")
     
     # 4. Copy documentation
     # Prefer a submission-specific README if present
@@ -187,11 +210,14 @@ scikit-learn==1.3.2
     training_metrics = read_training_metrics(metrics_file)
     bench_file = project_root / 'results' / 'inference_benchmark.json'
     bench = read_inference_benchmark(bench_file)
+    test_metrics_file = project_root / 'results' / 'test_evaluation_metrics.txt'
+    test_mean_iou = read_test_metrics(test_metrics_file)
     cpu_ms = None
     bench_status = None
     if bench and 'cpu' in bench and 'mean' in bench['cpu']:
         cpu_ms = bench['cpu']['mean']
         bench_status = bench.get('status')
+    cpu_ms_str = f"{cpu_ms:.1f}" if cpu_ms is not None else "N/A"
 
     config = {
         'project': {
@@ -313,6 +339,7 @@ submission/
 | Dice Score | {training_metrics['val_dice'] if training_metrics['val_dice'] is not None else 'N/A'} | [WARN] Low baseline |
 | Pixel Accuracy | {training_metrics['val_acc'] if training_metrics['val_acc'] is not None else 'N/A'} | [WARN] Low baseline |
 | Inference Speed (CPU) | {cpu_ms if cpu_ms is not None else 'N/A'} ms | {'[FAIL] FAIL (<50ms req)' if bench_status == 'FAIL' else 'N/A'} |
+| Test Mean IoU (local masks) | {test_mean_iou if test_mean_iou is not None else 'N/A'} | Informational |
 | Classes Segmented | 11/11 | [OK] All classes |
 | Model Size | ~10 MB | [OK] Lightweight |
 
@@ -342,7 +369,7 @@ Output Mask (476x938, 11 classes)
 
 ### Strengths
 [OK] **Fast Training**: 4-5 hours on CPU (10 epochs)  
-[WARN] **Inference Speed**: CPU benchmark is ~1205 ms/image (does NOT meet <50 ms requirement)  
+[WARN] **Inference Speed**: CPU benchmark is ~{cpu_ms_str} ms/image (does NOT meet <50 ms requirement)  
 [OK] **Reproducible**: Fixed seed, documented config, environment locked  
 [OK] **Generalizable**: Frozen backbone adapts to new biomes  
 
@@ -454,7 +481,7 @@ SUBMISSION SUMMARY:
   [OK] Documentation complete
   [OK] Requirements specified
   [OK] Reproducibility verified
-[WARN] Inference speed fails on CPU benchmark (~1205 ms)
+[WARN] Inference speed fails on CPU benchmark (~{cpu_ms_str} ms)
   [OK] All classes segmented
 
  Ready for Submission!

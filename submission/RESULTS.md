@@ -39,12 +39,30 @@ Best Epoch Metrics:
   Best Val Accuracy: 0.6901 (Epoch 10)
 ```
 
-## Per-Class Performance
-Per-class IoU/Dice values are **not computed** in this report. Use:
+## Test Set (Local Masks)
+These results come from running:
 ```bash
 python dataset/test_segmentation.py --data_dir dataset/Offroad_Segmentation_testImages --output_dir predictions
 ```
-This script produces a per-class IoU chart in `predictions/per_class_metrics.png`.
+Summary:
+- **Mean IoU (test set)**: **0.1996**
+
+Per-class IoU (from `results/test_evaluation_metrics.txt`):
+| Class | IoU |
+|---|---|
+| Background | N/A |
+| Trees | 0.0551 |
+| Lush Bushes | 0.0068 |
+| Dry Grass | 0.1271 |
+| Dry Bushes | 0.0524 |
+| Ground Clutter | 0.0318 |
+| Flowers | 0.0315 |
+| Logs | 0.0050 |
+| Rocks | 0.2125 |
+| Landscape | 0.5209 |
+| Sky | 0.9497 |
+
+Per-class chart: `results/test_per_class_metrics.png`
 
 ## Training Curves
 Training curves are stored in:
@@ -55,7 +73,7 @@ Training curves are stored in:
 
 ## Inference Speed
 Benchmark result from `results/inference_benchmark.json`:
-- CPU mean inference time: **~1204.7 ms/image**
+- CPU mean inference time: **~3188.7 ms/image**
 - Status: **FAIL** vs <50 ms requirement
 
 ## Failure Analysis

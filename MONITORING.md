@@ -19,6 +19,7 @@ Pixel Accuracy:  0.6901
 - `dataset/train_stats/evaluation_metrics.txt`
 
 ## Notes
-- The inference benchmark (CPU) is **~1204.7 ms/image** from `results/inference_benchmark.json`.
+- The inference benchmark (CPU) is **~3188.7 ms/image** from `results/inference_benchmark.json`.
+- Test evaluation (local masks) Mean IoU: **0.1996** from `results/test_evaluation_metrics.txt`.
 - Failure analysis in `results/failure_analysis.json` is a **placeholder** unless regenerated.
 

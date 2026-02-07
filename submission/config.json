@@ -3,7 +3,7 @@
     "name": "Offroad Segmentation Challenge",
     "framework": "PyTorch",
     "language": "Python 3.13",
-    "created": "2026-02-07T06:29:55.798585"
+    "created": "2026-02-07T07:12:38.727624"
   },
   "model": {
     "backbone": "DINOv2-ViT-S/14",
@@ -50,7 +50,7 @@
   },
   "performance": {
     "measured_val_iou": 0.27,
-    "cpu_inference_ms": 1204.7450200007006,
+    "cpu_inference_ms": 3188.717459999316,
     "benchmark_status": "FAIL",
     "inference_speed_pass": false
   },

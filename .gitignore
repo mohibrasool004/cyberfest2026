@@ -53,6 +53,11 @@ failure_analysis.json
 # Keep small JSON summaries in results/
 !results/
 !results/*.json
+!results/test_evaluation_metrics.txt
+!results/test_per_class_metrics.png
+
+# Local evaluation outputs
+predictions/
 
 # Logs
 *.log

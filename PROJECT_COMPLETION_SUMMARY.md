@@ -4,18 +4,18 @@
 - Dataset prepared and verified.
 - Training completed (10 epochs).
 - Training curves and metrics generated.
+- Test evaluation run (local masks).
 - Submission package created.
 
-## Final Metrics (Validation)
-- Mean IoU: **0.2700**
-- Dice: **0.4272**
-- Pixel Accuracy: **0.6901**
-
-## Performance Note
-CPU inference benchmark is **~1204.7 ms/image** (fails <50 ms requirement).
+## Metrics
+- Validation Mean IoU: 0.2700
+- Validation Dice: 0.4272
+- Validation Pixel Accuracy: 0.6901
+- Test Mean IoU (local masks): 0.1996
+- CPU Inference: ~3188.7 ms/image (FAIL vs <50 ms)
 
 ## Deliverables
-- `submission.zip` (latest package)
-- `RESULTS.md` (accurate summary)
-- `submission/HACKATHON_REPORT.docx` (report from draft)
+- `submission.zip`
+- `RESULTS.md`
+- `submission/HACKATHON_REPORT.docx`
 

@@ -41,7 +41,11 @@ pip install -r requirements.txt
 
 ## Inference Speed
 CPU benchmark from `results/inference_benchmark.json`:
-- **~1204.7 ms/image** (fails <50 ms requirement on CPU)
+- **~3188.7 ms/image** (fails <50 ms requirement on CPU)
+
+## Test Set (Local Masks)
+From `results/test_evaluation_metrics.txt`:
+- Mean IoU: **0.1996**
 
 ## Notes
 - `results/failure_analysis.json` is a placeholder unless regenerated from real model outputs.

@@ -54,7 +54,8 @@ submission/
 | Validation IoU | 0.27 | [WARN] Low baseline |
 | Dice Score | 0.4272 | [WARN] Low baseline |
 | Pixel Accuracy | 0.6901 | [WARN] Low baseline |
-| Inference Speed (CPU) | 1204.7450200007006 ms | [FAIL] FAIL (<50ms req) |
+| Inference Speed (CPU) | 3188.717459999316 ms | [FAIL] FAIL (<50ms req) |
+| Test Mean IoU (local masks) | 0.1996 | Informational |
 | Classes Segmented | 11/11 | [OK] All classes |
 | Model Size | ~10 MB | [OK] Lightweight |
 
@@ -84,7 +85,7 @@ Output Mask (476x938, 11 classes)
 
 ### Strengths
 [OK] **Fast Training**: 4-5 hours on CPU (10 epochs)  
-[WARN] **Inference Speed**: CPU benchmark is ~1205 ms/image (does NOT meet <50 ms requirement)  
+[WARN] **Inference Speed**: CPU benchmark is ~3188.7 ms/image (does NOT meet <50 ms requirement)  
 [OK] **Reproducible**: Fixed seed, documented config, environment locked  
 [OK] **Generalizable**: Frozen backbone adapts to new biomes  
 
@@ -138,7 +139,7 @@ See documentation:
 
 ---
 
-**Submission Date**: 2026-02-07 06:29:55  
+**Submission Date**: 2026-02-07 07:12:38  
 **Framework**: PyTorch 2.1.0  
 **Model**: DINOv2-ViT-S/14 + ConvNeXt Head  
 **Status**: [OK] Ready for Evaluation (metrics disclosed)

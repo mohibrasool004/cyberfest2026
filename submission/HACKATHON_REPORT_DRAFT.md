@@ -40,14 +40,28 @@
 - **Pixel Accuracy:** 0.6901
 
 ### Per-Class Performance
-Per-class IoU values are **not computed** in this report.  
-Use `python dataset/test_segmentation.py --data_dir dataset/Offroad_Segmentation_testImages` to generate per-class metrics.
+Per-class IoU from local test masks (`results/test_evaluation_metrics.txt`):
+| Class | IoU |
+|---|---|
+| Background | N/A |
+| Trees | 0.0551 |
+| Lush Bushes | 0.0068 |
+| Dry Grass | 0.1271 |
+| Dry Bushes | 0.0524 |
+| Ground Clutter | 0.0318 |
+| Flowers | 0.0315 |
+| Logs | 0.0050 |
+| Rocks | 0.2125 |
+| Landscape | 0.5209 |
+| Sky | 0.9497 |
+
+Mean IoU (test set): **0.1996**
 
 ### Training Curves
 - See `dataset/train_stats/training_curves.png` for loss, accuracy, IoU progression.
 
 ### Inference Speed
-- **CPU:** ~1204.7 ms/image (fails <50 ms requirement on CPU, from `results/inference_benchmark.json`)
+- **CPU:** ~3188.7 ms/image (fails <50 ms requirement on CPU, from `results/inference_benchmark.json`)
 
 ### Dashboard Innovation
 - **Streamlit dashboard** for judges: shows metrics, per-class results, failure analysis (text fallback if images unavailable)
