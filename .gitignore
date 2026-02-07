@@ -38,6 +38,9 @@ env/
 
 # Dataset (large files)
 Offroad_Segmentation_Training_Dataset/
+dataset/Offroad_Segmentation_testImages/
+dataset/segmentation_head.pth
+dataset/train_stats/
 *.zip
 
 # Training outputs
@@ -46,6 +49,10 @@ checkpoint_*.pt
 results/
 evaluation_results.json
 failure_analysis.json
+
+# Keep small JSON summaries in results/
+!results/
+!results/*.json
 
 # Logs
 *.log
@@ -57,6 +64,7 @@ failure_analysis.json
 !RESULTS.md
 !MONITORING.md
 !POST_TRAINING_WORKFLOW.md
+!submission/results/evaluation_metrics.txt
 
 # Temporary files
 *.tmp

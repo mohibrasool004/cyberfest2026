@@ -11,6 +11,46 @@ import zipfile
 from pathlib import Path
 from datetime import datetime
 
+
+def read_training_metrics(metrics_file: Path):
+    metrics = {
+        'val_iou': None,
+        'val_dice': None,
+        'val_acc': None,
+        'best_val_iou': None,
+        'best_val_dice': None,
+        'best_val_acc': None,
+        'best_epoch_iou': None,
+    }
+    if not metrics_file.exists():
+        return metrics
+    for line in metrics_file.read_text(encoding='utf-8').splitlines():
+        line = line.strip()
+        if line.startswith('Final Val IoU:'):
+            metrics['val_iou'] = float(line.split(':')[-1].strip())
+        elif line.startswith('Final Val Dice:'):
+            metrics['val_dice'] = float(line.split(':')[-1].strip())
+        elif line.startswith('Final Val Accuracy:'):
+            metrics['val_acc'] = float(line.split(':')[-1].strip())
+        elif line.startswith('Best Val IoU:'):
+            metrics['best_val_iou'] = float(line.split(':')[-1].split('(')[0].strip())
+            if 'Epoch' in line:
+                metrics['best_epoch_iou'] = int(line.split('Epoch')[-1].strip(' )'))
+        elif line.startswith('Best Val Dice:'):
+            metrics['best_val_dice'] = float(line.split(':')[-1].split('(')[0].strip())
+        elif line.startswith('Best Val Accuracy:'):
+            metrics['best_val_acc'] = float(line.split(':')[-1].split('(')[0].strip())
+    return metrics
+
+
+def read_inference_benchmark(bench_file: Path):
+    if not bench_file.exists():
+        return None
+    try:
+        return json.loads(bench_file.read_text(encoding='utf-8'))
+    except Exception:
+        return None
+
 def create_submission_package():
     """Create final submission zip file."""
     
@@ -22,8 +62,13 @@ def create_submission_package():
     project_root = Path('.')
     submission_dir = project_root / 'submission'
     
-    # Create submission directory
+    # Preserve report drafts if present inside submission/
+    preserved_files = {}
     if submission_dir.exists():
+        for name in ['HACKATHON_REPORT_DRAFT.md', 'HACKATHON_REPORT.docx']:
+            p = submission_dir / name
+            if p.exists():
+                preserved_files[name] = p.read_bytes()
         shutil.rmtree(submission_dir)
     submission_dir.mkdir()
     
@@ -43,9 +88,9 @@ def create_submission_package():
     
     if checkpoint:
         shutil.copy(checkpoint, submission_dir / 'checkpoint_final.pt')
-        print(f"  ✓ Copied model checkpoint ({checkpoint.stat().st_size / 1e6:.1f} MB)")
+        print(f"  [OK] Copied model checkpoint ({checkpoint.stat().st_size / 1e6:.1f} MB)")
     else:
-        print(f"  ⚠️  Checkpoint not found in: {checkpoint_paths}")
+        print(f"  [WARN]  Checkpoint not found in: {checkpoint_paths}")
     
     # 2. Copy training scripts
     scripts_dir = submission_dir / 'scripts'
@@ -62,32 +107,40 @@ def create_submission_package():
         src_path = project_root / src
         if src_path.exists():
             shutil.copy(src_path, scripts_dir / dst)
-            print(f"  ✓ Copied {dst}")
+            print(f"  [OK] Copied {dst}")
         else:
-            print(f"  ⚠️  Script not found: {src}")
+            print(f"  [WARN]  Script not found: {src}")
     
     # 3. Copy results and metrics
     results_dir = submission_dir / 'results'
     results_dir.mkdir()
     
-    # Copy training stats
-    stats_src = project_root / 'train_stats'
+    # Copy training stats (from dataset/train_stats)
+    stats_src = project_root / 'dataset' / 'train_stats'
     if stats_src.exists():
         for file in stats_src.glob('*'):
             if file.is_file():
                 shutil.copy(file, results_dir / file.name)
-        print(f"  ✓ Copied training statistics ({len(list(results_dir.glob('*')))} files)")
+        print(f"  [OK] Copied training statistics ({len(list(results_dir.glob('*')))} files)")
     
-    # Copy evaluation results if they exist
+    # Copy evaluation/benchmark results if they exist
     eval_results = project_root / 'results'
     if eval_results.exists():
         for file in eval_results.glob('*.json'):
             shutil.copy(file, results_dir / file.name)
-            print(f"  ✓ Copied {file.name}")
+            print(f"  [OK] Copied {file.name}")
     
     # 4. Copy documentation
+    # Prefer a submission-specific README if present
+    submission_readme = project_root / 'SUBMISSION_README.md'
+    if submission_readme.exists():
+        shutil.copy(submission_readme, submission_dir / 'README.md')
+        print("  [OK] Copied SUBMISSION_README.md as README.md")
+    else:
+        shutil.copy(project_root / 'README.md', submission_dir / 'README.md')
+        print("  [OK] Copied README.md")
+
     docs = [
-        'README.md',
         'RESULTS.md',
         'TRAINING_GUIDE.md',
         'SUBMISSION_CHECKLIST.md',
@@ -98,11 +151,20 @@ def create_submission_package():
         doc_path = project_root / doc
         if doc_path.exists():
             shutil.copy(doc_path, submission_dir / doc)
-            print(f"  ✓ Copied {doc}")
+            print(f"  [OK] Copied {doc}")
+
+    # Restore preserved report files (if any)
+    for name, data in preserved_files.items():
+        (submission_dir / name).write_bytes(data)
+        print(f"  [OK] Preserved {name}")
     
-    # 5. Create requirements.txt if not exists
+    # 5. Copy requirements.txt from root (fallback to minimal if missing)
     requirements = submission_dir / 'requirements.txt'
-    if not requirements.exists():
+    root_requirements = project_root / 'requirements.txt'
+    if root_requirements.exists():
+        shutil.copy(root_requirements, requirements)
+        print("  [OK] Copied requirements.txt")
+    else:
         req_content = """torch==2.1.0
 torchvision==0.16.0
 torchaudio==2.1.0
@@ -116,11 +178,21 @@ scikit-learn==1.3.2
 """
         with open(requirements, 'w') as f:
             f.write(req_content)
-        print(f"  ✓ Created requirements.txt")
+        print("  [OK] Created requirements.txt (minimal)")
     
     # 6. Create config file
     print("\n[2/4] Creating configuration file...")
     
+    metrics_file = project_root / 'dataset' / 'train_stats' / 'evaluation_metrics.txt'
+    training_metrics = read_training_metrics(metrics_file)
+    bench_file = project_root / 'results' / 'inference_benchmark.json'
+    bench = read_inference_benchmark(bench_file)
+    cpu_ms = None
+    bench_status = None
+    if bench and 'cpu' in bench and 'mean' in bench['cpu']:
+        cpu_ms = bench['cpu']['mean']
+        bench_status = bench.get('status')
+
     config = {
         'project': {
             'name': 'Offroad Segmentation Challenge',
@@ -143,21 +215,27 @@ scikit-learn==1.3.2
             'momentum': 0.9,
             'loss': 'CrossEntropyLoss',
             'device': 'CPU',
-            'duration_hours': 4.5,
+            'duration_hours': 5.9,
+            'final_val_iou': training_metrics['val_iou'],
+            'final_val_dice': training_metrics['val_dice'],
+            'final_val_acc': training_metrics['val_acc'],
+            'best_val_iou': training_metrics['best_val_iou'],
+            'best_epoch_iou': training_metrics['best_epoch_iou'],
         },
         'data': {
             'train_samples': 2857,
             'val_samples': 317,
-            'test_samples': 'N/A (RGB-only)',
+            'test_samples': 1002,
             'classes': [
                 'Background', 'Trees', 'Lush Bushes', 'Dry Grass', 'Dry Bushes',
                 'Ground Clutter', 'Flowers', 'Logs', 'Rocks', 'Landscape', 'Sky'
             ],
         },
         'performance': {
-            'expected_val_iou': 0.60,
-            'expected_inference_ms': 42.5,
-            'inference_speed_pass': True,
+            'measured_val_iou': training_metrics['val_iou'],
+            'cpu_inference_ms': cpu_ms,
+            'benchmark_status': bench_status,
+            'inference_speed_pass': False if bench_status == 'FAIL' else None,
         },
         'submission_checklist': {
             'model_checkpoint': True,
@@ -172,13 +250,13 @@ scikit-learn==1.3.2
     config_file = submission_dir / 'config.json'
     with open(config_file, 'w') as f:
         json.dump(config, f, indent=2)
-    print(f"  ✓ Created config.json")
+    print(f"  [OK] Created config.json")
     
     # 7. Create README for judges
     print("\n[3/4] Creating judge's guide...")
     
     judges_readme = submission_dir / 'JUDGE_README.md'
-    judges_guide = """# Hackathon Submission - Evaluation Guide for Judges
+    judges_guide = f"""# Hackathon Submission - Evaluation Guide for Judges
 
 ## Quick Start
 
@@ -210,20 +288,20 @@ python scripts/test_segmentation.py \\
 
 ```
 submission/
-├── checkpoint_final.pt          # Trained model (10 MB)
-├── scripts/
-│   ├── train_segmentation.py    # Training script (provided)
-│   ├── test_segmentation.py     # Test/inference script
-│   └── evaluation.py            # Evaluation framework
-├── results/
-│   ├── training_curves.png      # Loss & IoU progression
-│   ├── evaluation_metrics.txt   # Final metrics
-│   └── failure_analysis.json    # Per-class analysis
-├── README.md                    # Full documentation
-├── RESULTS.md                   # 8-page technical report
-├── TRAINING_GUIDE.md            # Training process details
-├── requirements.txt             # Dependencies
-└── config.json                  # Model configuration
+--- checkpoint_final.pt          # Trained model (10 MB)
+--- scripts/
+|   --- train_segmentation.py    # Training script (provided)
+|   --- test_segmentation.py     # Test/inference script
+|   --- evaluation.py            # Evaluation framework
+--- results/
+|   --- training_curves.png      # Loss & IoU progression
+|   --- evaluation_metrics.txt   # Final metrics
+|   --- failure_analysis.json    # Per-class analysis
+--- README.md                    # Full documentation
+--- RESULTS.md                   # 8-page technical report
+--- TRAINING_GUIDE.md            # Training process details
+--- requirements.txt             # Dependencies
+--- config.json                  # Model configuration
 
 ```
 
@@ -231,54 +309,54 @@ submission/
 
 | Metric | Value | Status |
 |--------|-------|--------|
-| Validation IoU | 0.60+ | ✅ Baseline |
-| Dice Score | 0.70+ | ✅ Baseline |
-| Pixel Accuracy | 0.82+ | ✅ Baseline |
-| Inference Speed | <50 ms | ✅ PASS |
-| Classes Segmented | 11/11 | ✅ All classes |
-| Model Size | ~10 MB | ✅ Lightweight |
+| Validation IoU | {training_metrics['val_iou'] if training_metrics['val_iou'] is not None else 'N/A'} | [WARN] Low baseline |
+| Dice Score | {training_metrics['val_dice'] if training_metrics['val_dice'] is not None else 'N/A'} | [WARN] Low baseline |
+| Pixel Accuracy | {training_metrics['val_acc'] if training_metrics['val_acc'] is not None else 'N/A'} | [WARN] Low baseline |
+| Inference Speed (CPU) | {cpu_ms if cpu_ms is not None else 'N/A'} ms | {'[FAIL] FAIL (<50ms req)' if bench_status == 'FAIL' else 'N/A'} |
+| Classes Segmented | 11/11 | [OK] All classes |
+| Model Size | ~10 MB | [OK] Lightweight |
 
 ## Architecture Overview
 
 ```
-Input Image (476×938)
-         ↓
-[DINOv2-ViT-S/14] ← Pre-trained backbone (frozen)
+Input Image (476x938)
+         v
+[DINOv2-ViT-S/14] <- Pre-trained backbone (frozen)
     384-dim embeddings
-         ↓
-[ConvNeXt Lightweight Head] ← Trained head (~10M params)
-  - Conv Stem (384→128)
+         v
+[ConvNeXt Lightweight Head] <- Trained head (~10M params)
+  - Conv Stem (384->128)
   - Depthwise-separable blocks
-  - Classifier (128→11 classes)
-         ↓
-Output Mask (476×938, 11 classes)
+  - Classifier (128->11 classes)
+         v
+Output Mask (476x938, 11 classes)
 ```
 
 **Why DINOv2?**
-- Pre-trained on 1M+ images → strong generic features
-- Self-supervised learning → robust to domain shift
+- Pre-trained on 1M+ images -> strong generic features
+- Self-supervised learning -> robust to domain shift
 - Fast inference (frozen backbone, no fine-tuning)
 - Good performance on downstream tasks
 
 ## Performance Analysis
 
 ### Strengths
-✅ **Fast Training**: 4-5 hours on CPU (10 epochs)  
-✅ **Real-time Inference**: <50 ms/image (meets requirement)  
-✅ **Reproducible**: Fixed seed, documented config, environment locked  
-✅ **Generalizable**: Frozen backbone adapts to new biomes  
+[OK] **Fast Training**: 4-5 hours on CPU (10 epochs)  
+[WARN] **Inference Speed**: CPU benchmark is ~1205 ms/image (does NOT meet <50 ms requirement)  
+[OK] **Reproducible**: Fixed seed, documented config, environment locked  
+[OK] **Generalizable**: Frozen backbone adapts to new biomes  
 
 ### Known Limitations
-⚠️ **Thin Objects**: Flowers & Logs have lower IoU (sparse pixels)  
-⚠️ **Class Confusion**: Dry/Lush bushes sometimes confused (color-based)  
-⚠️ **Baseline Approach**: No fine-tuning or heavy augmentation (v2 opportunities)  
+[WARN] **Thin Objects**: Flowers & Logs have lower IoU (sparse pixels)  
+[WARN] **Class Confusion**: Dry/Lush bushes sometimes confused (color-based)  
+[WARN] **Baseline Approach**: No fine-tuning or heavy augmentation (v2 opportunities)  
 
 ### Recommended Improvements
-1. **Class Weighting** → +0.05 IoU (easy, <1 hour)
-2. **Backbone Fine-tuning** → +0.07 IoU (moderate, 2-4 hours)
-3. **CRF Post-processing** → +0.02 IoU (easy, <30 min)
-4. **Ensembling** → +0.03 IoU (moderate, 3-5 hours)
-5. **Domain Adaptation** → +0.10 IoU (hard, 1-2 days)
+1. **Class Weighting** -> +0.05 IoU (easy, <1 hour)
+2. **Backbone Fine-tuning** -> +0.07 IoU (moderate, 2-4 hours)
+3. **CRF Post-processing** -> +0.02 IoU (easy, <30 min)
+4. **Ensembling** -> +0.03 IoU (moderate, 3-5 hours)
+5. **Domain Adaptation** -> +0.10 IoU (hard, 1-2 days)
 
 See `RESULTS.md` section 6 for detailed improvement strategies.
 
@@ -321,12 +399,12 @@ See documentation:
 **Submission Date**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}  
 **Framework**: PyTorch 2.1.0  
 **Model**: DINOv2-ViT-S/14 + ConvNeXt Head  
-**Status**: ✅ Ready for Evaluation
+**Status**: [OK] Ready for Evaluation (metrics disclosed)
 """
     
     with open(judges_readme, 'w', encoding='utf-8') as f:
         f.write(judges_guide)
-    print(f"  ✓ Created JUDGE_README.md")
+    print(f"  [OK] Created JUDGE_README.md")
     
     # 8. Create submission zip
     print("\n[4/4] Creating submission archive...")
@@ -342,44 +420,44 @@ See documentation:
                 zipf.write(file, arcname)
     
     zip_size = zip_path.stat().st_size / 1e6
-    print(f"  ✓ Created submission.zip ({zip_size:.1f} MB)")
+    print(f"  [OK] Created submission.zip ({zip_size:.1f} MB)")
     
     # Print summary
     print("\n" + "="*80)
-    print("✅ SUBMISSION PACKAGE COMPLETE")
+    print("[OK] SUBMISSION PACKAGE COMPLETE")
     print("="*80)
     
     summary = f"""
 SUBMISSION SUMMARY:
-──────────────────────────────────────────────────────────────────────────────
+------------------------------------------------------------------------------
 
-📦 Package: submission.zip ({zip_size:.1f} MB)
+[PKG] Package: submission.zip ({zip_size:.1f} MB)
 
-📁 Contents:
-  ├─ Model: checkpoint_final.pt (~10 MB)
-  ├─ Scripts: 4 files (training, testing, evaluation)
-  ├─ Results: metrics, curves, failure analysis
-  ├─ Docs: 5 markdown files + config.json
-  └─ Requirements: requirements.txt (locked versions)
+[DIR] Contents:
+  -- Model: checkpoint_final.pt (~10 MB)
+  -- Scripts: 4 files (training, testing, evaluation)
+  -- Results: metrics, curves, failure analysis
+  -- Docs: 5 markdown files + config.json
+  -- Requirements: requirements.txt (locked versions)
 
-📋 Documentation:
-  ├─ README.md              → Full overview & usage
-  ├─ RESULTS.md             → 8-page technical report
-  ├─ TRAINING_GUIDE.md      → Training details
-  ├─ JUDGE_README.md        → Evaluation instructions
-  └─ SUBMISSION_CHECKLIST   → Pre-submission verification
+[LIST] Documentation:
+  -- README.md              -> Full overview & usage
+  -- RESULTS.md             -> 8-page technical report
+  -- TRAINING_GUIDE.md      -> Training details
+  -- JUDGE_README.md        -> Evaluation instructions
+  -- SUBMISSION_CHECKLIST   -> Pre-submission verification
 
-✅ Checklist:
-  ✓ Model checkpoint present
-  ✓ Training scripts included
-  ✓ Evaluation results ready
-  ✓ Documentation complete
-  ✓ Requirements specified
-  ✓ Reproducibility verified
-  ✓ Inference speed <50ms
-  ✓ All classes segmented
+[OK] Checklist:
+  [OK] Model checkpoint present
+  [OK] Training scripts included
+  [OK] Evaluation results ready
+  [OK] Documentation complete
+  [OK] Requirements specified
+  [OK] Reproducibility verified
+[WARN] Inference speed fails on CPU benchmark (~1205 ms)
+  [OK] All classes segmented
 
-🚀 Ready for Submission!
+ Ready for Submission!
 
 NEXT STEP:
   1. Download submission.zip
@@ -388,7 +466,7 @@ NEXT STEP:
   4. Submit to judges via hackathon portal
   5. (Optional) Implement v2 improvements for higher score
 
-──────────────────────────────────────────────────────────────────────────────
+------------------------------------------------------------------------------
 """
     
     print(summary)
@@ -418,24 +496,29 @@ def verify_submission(zip_path):
         'submission/results/training_curves.png',
     ]
     
-    print(f"\n📋 Total files in archive: {len(files)}")
+    print(f"\n[LIST] Total files in archive: {len(files)}")
     
-    print("\n✓ Key files present:")
+    print("\n[OK] Key files present:")
     all_present = True
     for req_file in required_files:
         if req_file in files:
-            print(f"  ✓ {req_file}")
+            print(f"  [OK] {req_file}")
         else:
-            print(f"  ✗ {req_file} (MISSING)")
+            print(f"  [FAIL] {req_file} (MISSING)")
             all_present = False
     
     if all_present:
-        print("\n✅ ALL REQUIRED FILES PRESENT - SUBMISSION READY!")
+        print("\n[OK] ALL REQUIRED FILES PRESENT - SUBMISSION READY!")
     else:
-        print("\n⚠️  Some files missing - review before submitting")
+        print("\n[WARN]  Some files missing - review before submitting")
     
     return all_present
 
 if __name__ == '__main__':
     zip_file = create_submission_package()
     # verify_submission(zip_file)  # Uncomment after training completes
+
+
+
+
+

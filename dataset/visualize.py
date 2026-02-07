@@ -52,3 +52,4 @@ for image_file in sorted(image_files):
 
 print(f"\nProcessing complete! Colorized images saved to: {output_folder}")
 print(f"Total unique values found: {len(color_map)}")
+

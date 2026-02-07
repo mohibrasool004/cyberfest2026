@@ -162,7 +162,7 @@ def benchmark_inference(model, backbone, test_image_dir=None, num_iterations=10)
     results['cpu']['min'] = np.min(cpu_times)
     results['cpu']['max'] = np.max(cpu_times)
     
-    print(f"\n✓ CPU Results:")
+    print(f"\n[OK] CPU Results:")
     print(f"  Mean:   {results['cpu']['mean']:.2f} ms")
     print(f"  Std:    {results['cpu']['std']:.2f} ms")
     print(f"  Min:    {results['cpu']['min']:.2f} ms")
@@ -218,7 +218,7 @@ def benchmark_inference(model, backbone, test_image_dir=None, num_iterations=10)
         results['gpu']['min'] = np.min(gpu_times)
         results['gpu']['max'] = np.max(gpu_times)
         
-        print(f"\n✓ GPU Results:")
+        print(f"\n[OK] GPU Results:")
         print(f"  Mean:   {results['gpu']['mean']:.2f} ms")
         print(f"  Std:    {results['gpu']['std']:.2f} ms")
         print(f"  Min:    {results['gpu']['min']:.2f} ms")
@@ -232,22 +232,22 @@ def benchmark_inference(model, backbone, test_image_dir=None, num_iterations=10)
     print("="*80)
     
     cpu_pass = results['cpu']['mean'] < 50
-    print(f"\n✓ CPU Mean: {results['cpu']['mean']:.2f} ms")
+    print(f"\n[OK] CPU Mean: {results['cpu']['mean']:.2f} ms")
     print(f"  Requirement: < 50 ms")
-    print(f"  Status: {'✅ PASS' if cpu_pass else '❌ FAIL'}")
+    print(f"  Status: {'PASS' if cpu_pass else 'FAIL'}")
     
     if results['gpu'] is not None:
         gpu_pass = results['gpu']['mean'] < 50
-        print(f"\n✓ GPU Mean: {results['gpu']['mean']:.2f} ms")
+        print(f"\n[OK] GPU Mean: {results['gpu']['mean']:.2f} ms")
         print(f"  Requirement: < 50 ms")
-        print(f"  Status: {'✅ PASS' if gpu_pass else '❌ FAIL'}")
+        print(f"  Status: {'PASS' if gpu_pass else 'FAIL'}")
     
     # Overall status
     overall_pass = cpu_pass and (results['gpu'] is None or results['gpu']['mean'] < 50)
     results['status'] = 'PASS' if overall_pass else 'FAIL'
     
     print("\n" + "="*80)
-    print(f"OVERALL STATUS: {'✅ PASS' if overall_pass else '❌ FAIL'}")
+    print(f"OVERALL STATUS: {'PASS' if overall_pass else 'FAIL'}")
     print("="*80)
     
     return results
@@ -264,12 +264,12 @@ def main():
     backbone_arch = "vits14"
     backbone_name = f"dinov2_{backbone_arch}"
     backbone = torch.hub.load(repo_or_dir="facebookresearch/dinov2", model=backbone_name)
-    print(f"  ✓ Backbone loaded: {backbone_name}")
+    print(f"  [OK] Backbone loaded: {backbone_name}")
     
     # Load head
     print("  Loading segmentation head...")
     head = SegmentationHeadConvNeXt(in_channels=384, hidden_channels=128, num_classes=11)
-    print("  ✓ Head loaded")
+    print("  [OK] Head loaded")
     
     # Run benchmark
     results = benchmark_inference(
@@ -310,12 +310,15 @@ def main():
     with open(results_file, 'w') as f:
         json.dump(results_json, f, indent=2)
     
-    print(f"\n✓ Results saved to: {results_file}")
-    print(f"\n📊 Summary:")
-    print(f"  CPU Mean:     {results['cpu']['mean']:.2f} ms ✅" if results['cpu']['mean'] < 50 else f"  CPU Mean:     {results['cpu']['mean']:.2f} ms ❌")
+    print(f"\n[OK] Results saved to: {results_file}")
+    print(f"\n Summary:")
+    print(f"  CPU Mean:     {results['cpu']['mean']:.2f} ms PASS" if results['cpu']['mean'] < 50 else f"  CPU Mean:     {results['cpu']['mean']:.2f} ms FAIL")
     print(f"  Requirement:  < 50 ms")
-    print(f"  Status:       {'✅ PASS' if results['status'] == 'PASS' else '❌ FAIL'}")
+    print(f"  Status:       {'PASS' if results['status'] == 'PASS' else 'FAIL'}")
 
 
 if __name__ == '__main__':
     main()
+
+
+

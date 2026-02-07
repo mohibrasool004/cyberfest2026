@@ -48,21 +48,22 @@ value_map = {
     300: 3,      # Dry Grass
     500: 4,      # Dry Bushes
     550: 5,      # Ground Clutter
-    700: 6,      # Logs
-    800: 7,      # Rocks
-    7100: 8,     # Landscape
-    10000: 9     # Sky
+    600: 6,      # Flowers
+    700: 7,      # Logs
+    800: 8,      # Rocks
+    7100: 9,     # Landscape
+    10000: 10    # Sky
 }
 
 # Class names for visualization
 class_names = [
     'Background', 'Trees', 'Lush Bushes', 'Dry Grass', 'Dry Bushes',
-    'Ground Clutter', 'Logs', 'Rocks', 'Landscape', 'Sky'
+    'Ground Clutter', 'Flowers', 'Logs', 'Rocks', 'Landscape', 'Sky'
 ]
 
 n_classes = len(value_map)
 
-# Color palette for visualization (10 distinct colors)
+# Color palette for visualization (11 distinct colors)
 color_palette = np.array([
     [0, 0, 0],        # Background - black
     [34, 139, 34],    # Trees - forest green
@@ -70,6 +71,7 @@ color_palette = np.array([
     [210, 180, 140],  # Dry Grass - tan
     [139, 90, 43],    # Dry Bushes - brown
     [128, 128, 0],    # Ground Clutter - olive
+    [255, 0, 255],    # Flowers - magenta
     [139, 69, 19],    # Logs - saddle brown
     [128, 128, 128],  # Rocks - gray
     [160, 82, 45],    # Landscape - sienna
@@ -484,4 +486,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 

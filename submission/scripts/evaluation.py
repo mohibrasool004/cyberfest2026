@@ -165,3 +165,6 @@ def generate_failure_analysis(results, output_file='failure_analysis.json'):
 if __name__ == '__main__':
     # Placeholder: Would integrate with actual trained model
     print("Evaluation script ready. To be integrated with trained DINOv2 model.")
+
+
+

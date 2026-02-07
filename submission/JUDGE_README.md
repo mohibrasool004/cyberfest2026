@@ -30,20 +30,20 @@ python scripts/test_segmentation.py \
 
 ```
 submission/
-├── checkpoint_final.pt          # Trained model (10 MB)
-├── scripts/
-│   ├── train_segmentation.py    # Training script (provided)
-│   ├── test_segmentation.py     # Test/inference script
-│   └── evaluation.py            # Evaluation framework
-├── results/
-│   ├── training_curves.png      # Loss & IoU progression
-│   ├── evaluation_metrics.txt   # Final metrics
-│   └── failure_analysis.json    # Per-class analysis
-├── README.md                    # Full documentation
-├── RESULTS.md                   # 8-page technical report
-├── TRAINING_GUIDE.md            # Training process details
-├── requirements.txt             # Dependencies
-└── config.json                  # Model configuration
+--- checkpoint_final.pt          # Trained model (10 MB)
+--- scripts/
+|   --- train_segmentation.py    # Training script (provided)
+|   --- test_segmentation.py     # Test/inference script
+|   --- evaluation.py            # Evaluation framework
+--- results/
+|   --- training_curves.png      # Loss & IoU progression
+|   --- evaluation_metrics.txt   # Final metrics
+|   --- failure_analysis.json    # Per-class analysis
+--- README.md                    # Full documentation
+--- RESULTS.md                   # 8-page technical report
+--- TRAINING_GUIDE.md            # Training process details
+--- requirements.txt             # Dependencies
+--- config.json                  # Model configuration
 
 ```
 
@@ -51,54 +51,54 @@ submission/
 
 | Metric | Value | Status |
 |--------|-------|--------|
-| Validation IoU | 0.60+ | ✅ Baseline |
-| Dice Score | 0.70+ | ✅ Baseline |
-| Pixel Accuracy | 0.82+ | ✅ Baseline |
-| Inference Speed | <50 ms | ✅ PASS |
-| Classes Segmented | 11/11 | ✅ All classes |
-| Model Size | ~10 MB | ✅ Lightweight |
+| Validation IoU | 0.27 | [WARN] Low baseline |
+| Dice Score | 0.4272 | [WARN] Low baseline |
+| Pixel Accuracy | 0.6901 | [WARN] Low baseline |
+| Inference Speed (CPU) | 1204.7450200007006 ms | [FAIL] FAIL (<50ms req) |
+| Classes Segmented | 11/11 | [OK] All classes |
+| Model Size | ~10 MB | [OK] Lightweight |
 
 ## Architecture Overview
 
 ```
-Input Image (476×938)
-         ↓
-[DINOv2-ViT-S/14] ← Pre-trained backbone (frozen)
+Input Image (476x938)
+         v
+[DINOv2-ViT-S/14] <- Pre-trained backbone (frozen)
     384-dim embeddings
-         ↓
-[ConvNeXt Lightweight Head] ← Trained head (~10M params)
-  - Conv Stem (384→128)
+         v
+[ConvNeXt Lightweight Head] <- Trained head (~10M params)
+  - Conv Stem (384->128)
   - Depthwise-separable blocks
-  - Classifier (128→11 classes)
-         ↓
-Output Mask (476×938, 11 classes)
+  - Classifier (128->11 classes)
+         v
+Output Mask (476x938, 11 classes)
 ```
 
 **Why DINOv2?**
-- Pre-trained on 1M+ images → strong generic features
-- Self-supervised learning → robust to domain shift
+- Pre-trained on 1M+ images -> strong generic features
+- Self-supervised learning -> robust to domain shift
 - Fast inference (frozen backbone, no fine-tuning)
 - Good performance on downstream tasks
 
 ## Performance Analysis
 
 ### Strengths
-✅ **Fast Training**: 4-5 hours on CPU (10 epochs)  
-✅ **Real-time Inference**: <50 ms/image (meets requirement)  
-✅ **Reproducible**: Fixed seed, documented config, environment locked  
-✅ **Generalizable**: Frozen backbone adapts to new biomes  
+[OK] **Fast Training**: 4-5 hours on CPU (10 epochs)  
+[WARN] **Inference Speed**: CPU benchmark is ~1205 ms/image (does NOT meet <50 ms requirement)  
+[OK] **Reproducible**: Fixed seed, documented config, environment locked  
+[OK] **Generalizable**: Frozen backbone adapts to new biomes  
 
 ### Known Limitations
-⚠️ **Thin Objects**: Flowers & Logs have lower IoU (sparse pixels)  
-⚠️ **Class Confusion**: Dry/Lush bushes sometimes confused (color-based)  
-⚠️ **Baseline Approach**: No fine-tuning or heavy augmentation (v2 opportunities)  
+[WARN] **Thin Objects**: Flowers & Logs have lower IoU (sparse pixels)  
+[WARN] **Class Confusion**: Dry/Lush bushes sometimes confused (color-based)  
+[WARN] **Baseline Approach**: No fine-tuning or heavy augmentation (v2 opportunities)  
 
 ### Recommended Improvements
-1. **Class Weighting** → +0.05 IoU (easy, <1 hour)
-2. **Backbone Fine-tuning** → +0.07 IoU (moderate, 2-4 hours)
-3. **CRF Post-processing** → +0.02 IoU (easy, <30 min)
-4. **Ensembling** → +0.03 IoU (moderate, 3-5 hours)
-5. **Domain Adaptation** → +0.10 IoU (hard, 1-2 days)
+1. **Class Weighting** -> +0.05 IoU (easy, <1 hour)
+2. **Backbone Fine-tuning** -> +0.07 IoU (moderate, 2-4 hours)
+3. **CRF Post-processing** -> +0.02 IoU (easy, <30 min)
+4. **Ensembling** -> +0.03 IoU (moderate, 3-5 hours)
+5. **Domain Adaptation** -> +0.10 IoU (hard, 1-2 days)
 
 See `RESULTS.md` section 6 for detailed improvement strategies.
 
@@ -138,7 +138,7 @@ See documentation:
 
 ---
 
-**Submission Date**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}  
+**Submission Date**: 2026-02-07 06:29:55  
 **Framework**: PyTorch 2.1.0  
 **Model**: DINOv2-ViT-S/14 + ConvNeXt Head  
-**Status**: ✅ Ready for Evaluation
+**Status**: [OK] Ready for Evaluation (metrics disclosed)

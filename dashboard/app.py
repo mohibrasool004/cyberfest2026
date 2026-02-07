@@ -139,8 +139,8 @@ def main():
         st.subheader('Submission')
         submission_exists = (ROOT / 'submission.zip').exists()
         ckpt_exists = (ROOT / 'dataset' / 'segmentation_head.pth').exists()
-        st.write('submission.zip: %s' % ('✅' if submission_exists else '❌'))
-        st.write('checkpoint: %s' % ('✅' if ckpt_exists else '❌'))
+        st.write('submission.zip: %s' % ('[OK]' if submission_exists else '[FAIL]'))
+        st.write('checkpoint: %s' % ('[OK]' if ckpt_exists else '[FAIL]'))
         if submission_exists:
             with open(ROOT / 'submission.zip', 'rb') as f:
                 st.download_button('Download submission.zip', f, file_name='submission.zip')
@@ -265,7 +265,7 @@ def main():
 
                     st.subheader('Worst Cases')
                     for case in fa.get('worst_cases', []):
-                        st.markdown(f"**Rank {case.get('rank','?')} — mean IoU: {case.get('mean_iou', '?')}**")
+                        st.markdown(f"**Rank {case.get('rank','[OK]')}  mean IoU: {case.get('mean_iou', '[OK]')}**")
                         # show worst classes table
                         worst = case.get('worst_3_classes', [])
                         if worst:
@@ -320,3 +320,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+

@@ -7,3 +7,6 @@ text = extract_text(pdf_path)
 with open(out_path, "w", encoding="utf-8") as f:
     f.write(text)
 print("EXTRACTION_DONE")
+
+
+

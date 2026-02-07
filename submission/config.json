@@ -3,7 +3,7 @@
     "name": "Offroad Segmentation Challenge",
     "framework": "PyTorch",
     "language": "Python 3.13",
-    "created": "2026-02-06T23:53:17.548922"
+    "created": "2026-02-07T06:29:55.798585"
   },
   "model": {
     "backbone": "DINOv2-ViT-S/14",
@@ -23,12 +23,17 @@
     "momentum": 0.9,
     "loss": "CrossEntropyLoss",
     "device": "CPU",
-    "duration_hours": 4.5
+    "duration_hours": 5.9,
+    "final_val_iou": 0.27,
+    "final_val_dice": 0.4272,
+    "final_val_acc": 0.6901,
+    "best_val_iou": 0.27,
+    "best_epoch_iou": 10
   },
   "data": {
     "train_samples": 2857,
     "val_samples": 317,
-    "test_samples": "N/A (RGB-only)",
+    "test_samples": 1002,
     "classes": [
       "Background",
       "Trees",
@@ -44,9 +49,10 @@
     ]
   },
   "performance": {
-    "expected_val_iou": 0.6,
-    "expected_inference_ms": 42.5,
-    "inference_speed_pass": true
+    "measured_val_iou": 0.27,
+    "cpu_inference_ms": 1204.7450200007006,
+    "benchmark_status": "FAIL",
+    "inference_speed_pass": false
   },
   "submission_checklist": {
     "model_checkpoint": true,

@@ -2,16 +2,16 @@
 
 ## 1. Title & Summary
 
-**Team Name:** [Your Team Name]
-**Project Name:** Offroad Semantic Segmentation
-**Tagline:** Fast, Accurate, and Judge-Friendly Segmentation with Interactive Dashboard
+**Team Name:** [Your Team Name]  
+**Project Name:** Offroad Semantic Segmentation  
+**Tagline:** Fast, Accurate, and Judge-Friendly Segmentation with Interactive Dashboard  
 
 ## 2. Methodology
 
 ### Dataset
 - **Source:** Falcon synthetic desert dataset (Duality AI)
 - **Classes:** 11 semantic categories
-- **Splits:** Train (2,857), Val (317), Test (unseen biome)
+- **Splits:** Train (2,857), Val (317), Test (1,002, masks present in local copy)
 - **Preprocessing:** Resize to 476x938, normalization (ImageNet stats)
 
 ### Model Architecture
@@ -35,25 +35,19 @@
 ## 3. Results & Performance
 
 ### Final Validation Metrics
-- **Mean IoU:** 0.35 (Flowers), 0.42 (Logs), 0.25 (Ground Clutter), 0.45 (Dry Grass), 0.5 (Dry Bushes)
-- **Dice Score:** [Fill from evaluation_metrics.txt]
-- **Pixel Accuracy:** [Fill from evaluation_metrics.txt]
+- **Mean IoU:** 0.2700 (from `dataset/train_stats/evaluation_metrics.txt`)
+- **Dice Score:** 0.4272
+- **Pixel Accuracy:** 0.6901
 
 ### Per-Class Performance
-| Class           | IoU   |
-|-----------------|-------|
-| Flowers         | 0.05  |
-| Logs            | 0.12  |
-| Ground Clutter  | 0.25  |
-| Dry Grass       | 0.45  |
-| Dry Bushes      | 0.5   |
-| ...             | ...   |
+Per-class IoU values are **not computed** in this report.  
+Use `python dataset/test_segmentation.py --data_dir dataset/Offroad_Segmentation_testImages` to generate per-class metrics.
 
 ### Training Curves
-- See `results/training_curves.png` for loss, accuracy, IoU progression.
+- See `dataset/train_stats/training_curves.png` for loss, accuracy, IoU progression.
 
 ### Inference Speed
-- **CPU:** <50 ms/image (meets hackathon requirement)
+- **CPU:** ~1204.7 ms/image (fails <50 ms requirement on CPU, from `results/inference_benchmark.json`)
 
 ### Dashboard Innovation
 - **Streamlit dashboard** for judges: shows metrics, per-class results, failure analysis (text fallback if images unavailable)
@@ -75,7 +69,7 @@
 
 ### Inference Speed vs. Accuracy
 - **Problem:** Need <50ms/image
-- **Solution:** DINOv2-S backbone, frozen, lightweight head
+- **Solution:** Current CPU benchmark fails requirement; consider GPU or model optimization
 
 ## 5. Optimizations
 - **Transfer learning** (DINOv2 backbone)
@@ -85,12 +79,8 @@
 
 ## 6. Failure Case Analysis
 
-### Worst-Performing Classes
-| Class           | IoU   | Likely Cause                  | Recommendation                |
-|-----------------|-------|-------------------------------|-------------------------------|
-| Flowers         | 0.05  | Few pixels, thin shapes       | Class weighting, focal loss   |
-| Logs            | 0.12  | Sparse, irregular, similar color | Increase class weight, fine-tune backbone |
-| Ground Clutter  | 0.25  | High intra-class variance     | Morphological post-processing |
+Failure analysis is **not computed** in this report. The current `results/failure_analysis.json`
+is a placeholder unless regenerated from model outputs.
 
 ### Recommendations
 - **Short term:** Class weighting, more epochs, data augmentation
@@ -99,13 +89,11 @@
 
 ## 7. Conclusion & Future Work
 - **Achievements:**
-  - Fast, reproducible, and accurate segmentation
-  - Real-time inference on CPU
-  - Dashboard for transparent, judge-friendly review
+  - Reproducible segmentation baseline
+  - Clear documentation and packaging
 - **Next Steps:**
-  - Implement class weighting, stronger augmentation
-  - Fine-tune backbone for further gains
-  - Explore domain adaptation for real-world data
+  - Improve accuracy (IoU 0.2700 is low baseline)
+  - Optimize inference speed for <50 ms requirement
 
 ## 8. Appendix
 - See `README.md` for setup and reproduction
